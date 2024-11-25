@@ -1,15 +1,19 @@
-from pandas import read_csv
+from pandas import read_csv, DataFrame
+import numpy as np
 from collections import Counter
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, classification_report
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, BatchNormalization
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-from tensorflow.keras.regularizers import l2
+from sklearn.metrics import accuracy_score
+from tensorflow.keras.models import Sequential  # type: ignore
+from tensorflow.keras.layers import Dense, Dropout, BatchNormalization  # type: ignore
+from tensorflow.keras.optimizers import Adam  # type: ignore
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint  # type: ignore
+from tensorflow.keras.regularizers import l2  # type: ignore
 from imblearn.over_sampling import SMOTE
+import joblib
+
+
 
 # Assigning column names
 dt_colnames = ['age', 'year', 'nodes', 'class']
@@ -17,14 +21,7 @@ dt_colnames = ['age', 'year', 'nodes', 'class']
 # Read the dataset
 dataset = 'BC.csv'
 read_dt = read_csv(dataset, header=None, names=dt_colnames)
-print(read_dt)
 
-# Calculate target distribution
-targets = read_dt['class'].values
-target_counter = Counter(targets)
-for key, value in target_counter.items():
-    percent = value / len(targets) * 100
-    print(f'Class={key}, Count={value}, Percent={round(percent, 4)}%')
 
 # Preprocess the data
 input_data, output_data = read_dt.values[:, :-1], read_dt.values[:, -1]
@@ -71,10 +68,13 @@ checkpoint = ModelCheckpoint('best_model.keras', monitor='val_accuracy', save_be
 history = model.fit(in_train, out_train, epochs=400, batch_size=64, validation_data=(in_test, out_test), 
                     callbacks=[checkpoint, early_stopping])
 
+# Save the fitted scaler
+joblib.dump(scaler, 'scaler.pkl')
+
 # Evaluate the best saved model
 model.load_weights('best_model.keras')
+    
 out_predict = (model.predict(in_test) > 0.5).astype("int32")
 score = accuracy_score(out_test, out_predict)
 
 print(f'Improved Test Accuracy: {round(score, 4)}')
-print(classification_report(out_test, out_predict))
