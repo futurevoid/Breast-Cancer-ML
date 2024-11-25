@@ -10,7 +10,7 @@ from tensorflow.keras.layers import Dense, Dropout, BatchNormalization  # type: 
 from tensorflow.keras.optimizers import Adam  # type: ignore
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint  # type: ignore
 from tensorflow.keras.regularizers import l2  # type: ignore
-from imblearn.over_sampling import SMOTE
+from imblearn.combine import SMOTETomek
 import joblib
 
 
@@ -33,8 +33,8 @@ input_data = input_data.astype('float32')
 output_data = LabelEncoder().fit_transform(output_data)
 
 # Handle class imbalance
-smote = SMOTE(random_state=42)
-input_data_balanced, output_data_balanced = smote.fit_resample(input_data, output_data)
+smote_tomek = SMOTETomek(random_state=42)
+input_data_balanced, output_data_balanced = smote_tomek.fit_resample(input_data, output_data)
 
 # Train-Test Split
 in_train, in_test, out_train, out_test = train_test_split(
@@ -77,4 +77,4 @@ model.load_weights('best_model.keras')
 out_predict = (model.predict(in_test) > 0.5).astype("int32")
 score = accuracy_score(out_test, out_predict)
 
-print(f'Improved Test Accuracy: {round(score, 4)}')
+print(f'Test Accuracy: {round(score, 4)}')
